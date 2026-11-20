@@ -542,6 +542,8 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 .sh-warn{font-size:13px;color:#ffb4a8;background:rgba(255,80,60,.1);border-radius:10px;padding:10px 12px;margin-bottom:8px;line-height:1.4}
 .sh-ok{width:100%;margin-top:16px}
 .sh-later{width:100%;background:none;color:#8a8782;font-family:var(--body);font-size:13px;padding:12px;border:0}
+.sh-arrow{text-align:center;font-size:30px;color:var(--acc2);margin-top:6px;animation:sha 1s ease-in-out infinite}
+@keyframes sha{50%{transform:translateY(6px)}}
 </style>
 </head>
 <body>
@@ -1592,8 +1594,11 @@ splash().then(()=>{show('title');fitAll($('title'))});
     if(inApp) return `<p class="sh-warn">Stai usando il browser interno di un’app: da qui non si può installare.</p>`+
       (ios?step(1,'Tocca <b>•••</b> o l’icona della bussola e scegli <b>Apri in Safari</b>.')+step(2,`In Safari tocca <b>Condividi</b> ${SHARE}`)+step(3,'Scegli <b>Aggiungi alla schermata Home</b> → <b>Aggiungi</b>.')
           :step(1,'Tocca <b>⋮</b> in alto e scegli <b>Apri in Chrome</b>.')+step(2,'In Chrome tocca <b>⋮</b> → <b>Installa app</b> (o “Aggiungi a schermata Home”).'));
-    if(ios) return (iosSafari?'':`<p class="sh-warn">Su iPhone conviene usare Safari.</p>`)+
-      step(1,`Tocca <b>Condividi</b> ${SHARE} nella barra di Safari (in basso, o in alto su iPad).`)+step(2,'Scorri e scegli <b>Aggiungi alla schermata Home</b>.')+step(3,'Tocca <b>Aggiungi</b>: trovi l’icona Kinopatia sulla home.');
+    if(ios) return (iosSafari?'':`<p class="sh-warn">Apri questo link in <b>Safari</b>: da altre app l’installazione non è disponibile.</p>`)+
+      step(1,`Nella barra di Safari tocca <b>•••</b> (accanto all’indirizzo), poi <b>Condividi</b> ${SHARE}. Sui modelli più vecchi tocca direttamente ${SHARE}.`)+
+      step(2,'Scorri in basso e scegli <b>Aggiungi alla schermata Home</b>.')+
+      step(3,'Lascia attivo <b>Apri come app web</b> e tocca <b>Aggiungi</b>: l’icona rossa Kinopatia arriva sulla home.')+
+      `<div class="sh-arrow">↓</div>`;
     if(android) return step(1,'Tocca <b>⋮</b> in alto a destra in Chrome.')+step(2,'Scegli <b>Installa app</b> (o “Aggiungi a schermata Home”).')+step(3,'Conferma con <b>Installa</b>.');
     return step(1,'Nella barra degli indirizzi clicca l’icona <b>Installa</b> ⊕ (Chrome/Edge).')+step(2,'Oppure apri il link dal telefono e installala lì.');
   }
