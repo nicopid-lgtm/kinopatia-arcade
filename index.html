@@ -1432,7 +1432,7 @@ function newMix(){
    cambiano solo il contenuto, lo sfondo resta. Si chiude solo quando parte il gioco. */
 let score=0,lives=3,maxLives=3,level=0,last=null,cur=null,ended=true,raf=null,dur=5,tStart=0,shot=0;
 let warm=[],warmTotal=0,warmup=true,speedWins=0;
-const LEVEL_EVERY=3, SPEED_STEP=.2, BRIEF_MS=4000, QUICK_MS=850;
+const LEVEL_EVERY=3, SPEED_STEP=.2, BRIEF_MS=6000, QUICK_MS=850;
 function renderLives(){$('lives').innerHTML=Array.from({length:maxLives},(_,i)=>logoSVG(i>=lives?'lost':'')).join('')}
 function setLvl(){$('lvl').textContent=warmup?`RISCALDAMENTO ${warmTotal-warm.length}/${warmTotal}`:'SPEED '+level}
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
