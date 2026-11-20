@@ -133,6 +133,13 @@ input[type=range]::-moz-range-thumb{width:26px;height:54px;border-radius:12px;ba
   background:radial-gradient(circle at 32% 28%,#fff 0,#cfcfcf 12%,#6d6d6d 46%,#1a1a1a 82%,#0a0a0a 100%);
   box-shadow:0 10px 18px rgba(0,0,0,.55)}
 .sph.inv{background:radial-gradient(circle at 68% 72%,#fff 0,#cfcfcf 12%,#6d6d6d 46%,#1a1a1a 82%,#0a0a0a 100%)}
+.nm-wrap{position:relative;width:100%;max-width:330px;display:flex;flex-direction:column;align-items:center}
+.nm-sun{align-self:flex-start;display:flex;align-items:center;gap:8px;margin-top:18px;font-size:11px;letter-spacing:.18em;color:#F5C542;font-weight:600}
+.nm-sun svg{width:34px;height:34px;flex:none}
+.nm-wrap .grid{margin-top:10px;padding:16px 18px 22px 14px;border-radius:22px;background:linear-gradient(160deg,#bdb8ae,#8e897f);box-shadow:inset 0 2px 0 rgba(255,255,255,.35)}
+.sph,.shd{position:relative}
+.sph::after,.shd::after{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;
+  box-shadow:inset -3px -4px 6px rgba(255,255,255,.10)}
 .sph:active{transform:scale(.92)}
 .sph.bad{outline:3px solid var(--acc);outline-offset:3px}
 .sph.good{outline:3px solid var(--acc2);outline-offset:3px}
@@ -1042,21 +1049,27 @@ const GAMES = [
     const sh=Math.max(12,40-lv*7), dir=pick([[1,.4],[.4,1],[1,1],[-.2,1]]);
     const hx=32+sh*dir[0], hy=28+sh*dir[1];
     const ornCols=[THEME.acc,'#F5C542','#E8E4DA',THEME.acc2];
-    const sph=(inv,col)=>col
-      ? `background:radial-gradient(circle at ${inv?hx:32}% ${inv?hy:28}%,#fff 0,${col} 22%,${shade(col,45)} 62%,#050505 100%)`
-      : `background:radial-gradient(circle at ${inv?hx:32}% ${inv?hy:28}%,#fff 0,#cfcfcf 12%,#6d6d6d 46%,#1a1a1a 82%,#0a0a0a 100%)`;
+    // sfera vera: punto luce, colore, terminatore scuro e ombra portata sempre in basso a destra
+    const sph=(inv,col)=>{const x=inv?hx:30, y=inv?hy:26;
+      const base=col||'#a8a8a8', mid=shade(base,72), dk=shade(base,28);
+      return `background:radial-gradient(circle at ${x}% ${y}%,#fff 0,${col?`color-mix(in srgb, ${col} 45%, #fff)`:'#f2f2f2'} 7%,${base} 24%,${mid} 46%,${dk} 72%,#000 100%);box-shadow:8px 10px 0 -2px rgba(0,0,0,.35),12px 15px 14px rgba(0,0,0,.25)`};
     const subtle=lv>=2;
     const cube=(inv)=>{const top=inv&&!subtle?'#2c2c2c':'#ececec', L=inv?'#3a3a3a':'#8a8a8a', R=inv?'#8a8a8a':'#333';
-      return `<svg class="cube" viewBox="0 0 100 100"><polygon points="50,8 90,30 50,52 10,30" fill="${top}"/><polygon points="10,30 50,52 50,96 10,74" fill="${L}"/><polygon points="90,30 50,52 50,96 90,74" fill="${R}"/></svg>`};
-    const so=Math.max(3,7-lv);
+      return `<svg class="cube" viewBox="0 0 100 106"><ellipse cx="64" cy="98" rx="34" ry="7" fill="rgba(0,0,0,.3)"/><polygon points="50,8 90,30 50,52 10,30" fill="${top}"/><polygon points="10,30 50,52 50,96 10,74" fill="${L}"/><polygon points="90,30 50,52 50,96 90,74" fill="${R}"/></svg>`};
+    const so=Math.max(5,10-lv);
+    const shdBg='background:radial-gradient(circle at 30% 26%,#fff 0,#f4f2ee 10%,#cfc9bd 42%,#7c766b 78%,#3d3a34 100%)';
     const cells=Array.from({length:n*n},(_,i)=> shape==='shadow'
-      ? `<div class="shd" data-i="${i}" style="background:linear-gradient(135deg,#f4f2ee,#bdb8ae);box-shadow:${i===odd?-so:so}px ${i===odd?-so:so}px 0 rgba(0,0,0,.55)"></div>`
+      ? `<div class="shd" data-i="${i}" style="${shdBg};box-shadow:${i===odd?-so:so}px ${i===odd?-so:so}px 0 rgba(0,0,0,.42)"></div>`
       : shape==='cube'
       ? `<div data-i="${i}">${cube(i===odd)}</div>`
       : `<div class="sph ${shape==='orn'?'orn':''}" style="${sph(i===odd, shape==='orn'?pick(ornCols):null)}" data-i="${i}"></div>`).join('');
     const label={orn:'Una pallina',sph:'Una sfera',cube:'Un cubo',shadow:'Un’ombra'}[shape];
+    // con "Notte di consegna" (negativo) la luce si leggerebbe al contrario: qui la scena resta in positivo
+    const f=(typeof MIX!=='undefined'&&MIX&&MIX.mod&&/invert/.test(MIX.mod.filter||''))?`filter:${MIX.mod.filter}`:'';
+    const sun=`<svg viewBox="0 0 40 40"><g stroke="#F5C542" stroke-width="2.4" stroke-linecap="round">${[0,45,90,135,180,225,270,315].map(a=>`<line x1="${12+Math.cos(a*Math.PI/180)*8}" y1="${12+Math.sin(a*Math.PI/180)*8}" x2="${12+Math.cos(a*Math.PI/180)*11}" y2="${12+Math.sin(a*Math.PI/180)*11}"/>`).join('')}<line x1="21" y1="21" x2="36" y2="36" stroke-dasharray="3 3"/></g><circle cx="12" cy="12" r="5.5" fill="#F5C542"/><path d="M37 30v7h-7" fill="none" stroke="#F5C542" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
     st.innerHTML=`<div class="cmd">NORMALE INVERTITA</div><div class="sub">${shape==='shadow'?'Un’ombra cade dal lato sbagliato.':label+' prende la luce dal lato sbagliato.'}</div>
-      <div class="grid" style="grid-template-columns:repeat(${n},1fr);gap:${n>5?8:12}px">${cells}</div>`;
+      <div class="nm-wrap" style="${f}"><div class="nm-sun">${sun}LUCE DA QUI</div>
+      <div class="grid" style="grid-template-columns:repeat(${n},1fr);gap:${n>5?10:14}px">${cells}</div></div>`;
     const els=[...st.querySelectorAll('[data-i]')];
     const mark=(el,c)=>(el.querySelector('.cube')||el).classList.add(c);
     els.forEach(el=>el.addEventListener('pointerdown',()=>{
