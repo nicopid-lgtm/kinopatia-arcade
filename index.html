@@ -1516,7 +1516,7 @@ function start(){
 /* ---------- CLASSIFICA & GIOCATORE ----------
    LB_URL = indirizzo dell'app web Google Apps Script (backend/Code.gs).
    Vuoto = modalità demo: la classifica resta sul telefono. */
-const LB_URL='';
+const LB_URL='https://kinopatia.com/arcade-api/api.php';
 const LIVE=!!LB_URL;
 const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 const getPlayer=()=>store.get('knp_player',null);
