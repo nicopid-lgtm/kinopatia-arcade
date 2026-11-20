@@ -515,6 +515,24 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 .ins-btn{background:var(--acc2);color:#000;font-size:11px;letter-spacing:.1em;font-weight:700;padding:10px 12px;border-radius:999px}
 .ins-x{background:none;color:#666;font-size:13px;padding:6px}
 .ios-share{display:inline-block;border:1px solid #888;border-radius:4px;padding:0 3px;font-size:11px}
+
+/* installazione: bottone in copertina + guida */
+.tb-r{display:flex;gap:8px;align-items:center}
+.getapp{font-family:var(--body);font-size:11px;font-weight:700;letter-spacing:.06em;padding:7px 11px;border-radius:999px;background:var(--acc2);color:#000;border:0}
+.getapp[hidden]{display:none}
+.sheet{position:absolute;inset:0;z-index:60;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;opacity:0;transition:opacity .25s}
+.sheet.on{opacity:1}.sheet[hidden]{display:none}
+.sh-card{width:100%;background:#141414;border-top:1px solid #2a2a2a;border-radius:28px 28px 0 0;padding:22px 22px calc(22px + env(safe-area-inset-bottom));transform:translateY(30px);transition:transform .25s}
+.sheet.on .sh-card{transform:none}
+.sh-head{display:flex;gap:14px;align-items:center;margin-bottom:16px}
+.sh-ic{width:54px;height:54px;flex:none;border-radius:14px;background:#000;border:1px solid #2a2a2a;padding:11px;color:#fff}
+.sh-head b{display:block;font-family:var(--disp);font-size:16px}.sh-head span{font-size:13px;color:#a9a59e}
+.sh-step{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-top:1px solid #222}
+.sh-step>span{width:26px;height:26px;flex:none;border-radius:50%;background:var(--acc2);color:#000;font-family:var(--disp);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.sh-step p{font-size:15px;line-height:1.4;color:#e6e2da;margin-top:2px}
+.sh-warn{font-size:13px;color:#ffb4a8;background:rgba(255,80,60,.1);border-radius:10px;padding:10px 12px;margin-bottom:8px;line-height:1.4}
+.sh-ok{width:100%;margin-top:16px}
+.sh-later{width:100%;background:none;color:#8a8782;font-family:var(--body);font-size:13px;padding:12px;border:0}
 </style>
 </head>
 <body>
@@ -533,12 +551,18 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     <div class="sp-flash" id="spFlash"></div>
   </div>
 
+  <div id="sheet" class="sheet" hidden><div class="sh-card">
+    <div class="sh-head"><div class="sh-ic" data-logo></div><div><b>Installa Kinopatia Arcade</b><span>Icona sulla home, schermo intero, anche offline.</span></div></div>
+    <div id="shBody"></div>
+    <button class="btn acc sh-ok" id="shOk">HO CAPITO</button><button class="sh-later" id="shLater">Gioca senza installare</button>
+  </div></div>
+
   <!-- TITLE -->
   <section id="title" class="screen">
     <canvas id="bg3d"></canvas>
     <div class="title-scroll">
       <div class="poster" id="poster">
-        <div class="topbar"><div class="logo-slot" data-logo></div><span class="edbadge" id="edTag"></span></div>
+        <div class="topbar"><div class="logo-slot" data-logo></div><div class="tb-r"><button class="getapp" id="getApp" hidden>⬇ Installa app</button><span class="edbadge" id="edTag"></span></div></div>
         <div class="hero-art" id="heroArt"></div>
         <div class="hero">
           <div class="kicker" id="kicker"></div>
@@ -1542,24 +1566,48 @@ splash().then(()=>{show('title');fitAll($('title'))});
 
 /* ---------- APP INSTALLABILE (PWA) ---------- */
 (function pwa(){
+  const ua=navigator.userAgent;
   const standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
-  if('serviceWorker' in navigator&&location.protocol.startsWith('http')){
-    addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
-  }
-  if(standalone||store.get('knp_install_x',false))return;
-  const box=$('install'),btn=$('insBtn'),msg=$('insMsg');
-  box.querySelector('[data-logo]').innerHTML=logoSVG();
-  const ios=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  if('serviceWorker' in navigator&&location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(()=>{});
+  if(standalone)return;
+  const ios=/iphone|ipad|ipod/i.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  const android=/android/i.test(ua), mobile=ios||android;
+  const inApp=/FBAN|FBAV|Instagram|LinkedInApp|WhatsApp|Line\/|GSA\/|Snapchat|Twitter|TikTok|Messenger|; wv\)/i.test(ua);
+  const iosSafari=ios&&/Safari/i.test(ua)&&!/CriOS|FxiOS|EdgiOS|OPiOS/i.test(ua)&&!inApp;
   let deferred=null;
-  addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;box.hidden=false});
-  if(ios&&location.protocol.startsWith('http')){box.hidden=false;btn.hidden=true;
-    msg.innerHTML='In Safari tocca <b>Condividi</b> <span class="ios-share">⬆︎</span> e poi <b>“Aggiungi alla schermata Home”</b>.'}
-  btn.addEventListener('click',async()=>{
-    if(deferred){deferred.prompt();const r=await deferred.userChoice;deferred=null;if(r.outcome==='accepted')box.hidden=true}
-    else if(ios){box.classList.toggle('open')}
-  });
+  const box=$('install'),btn=$('insBtn'),msg=$('insMsg'),top=$('getApp'),sheet=$('sheet'),body=$('shBody');
+  document.querySelectorAll('#install [data-logo],#sheet [data-logo]').forEach(e=>e.innerHTML=logoSVG());
+  const step=(n,t)=>`<div class="sh-step"><span>${n}</span><p>${t}</p></div>`;
+  const SHARE='<span class="ios-share">⬆︎</span>';
+  function guide(){
+    if(inApp) return `<p class="sh-warn">Stai usando il browser interno di un’app: da qui non si può installare.</p>`+
+      (ios?step(1,'Tocca <b>•••</b> o l’icona della bussola e scegli <b>Apri in Safari</b>.')+step(2,`In Safari tocca <b>Condividi</b> ${SHARE}`)+step(3,'Scegli <b>Aggiungi alla schermata Home</b> → <b>Aggiungi</b>.')
+          :step(1,'Tocca <b>⋮</b> in alto e scegli <b>Apri in Chrome</b>.')+step(2,'In Chrome tocca <b>⋮</b> → <b>Installa app</b> (o “Aggiungi a schermata Home”).'));
+    if(ios) return (iosSafari?'':`<p class="sh-warn">Su iPhone conviene usare Safari.</p>`)+
+      step(1,`Tocca <b>Condividi</b> ${SHARE} nella barra di Safari (in basso, o in alto su iPad).`)+step(2,'Scorri e scegli <b>Aggiungi alla schermata Home</b>.')+step(3,'Tocca <b>Aggiungi</b>: trovi l’icona Kinopatia sulla home.');
+    if(android) return step(1,'Tocca <b>⋮</b> in alto a destra in Chrome.')+step(2,'Scegli <b>Installa app</b> (o “Aggiungi a schermata Home”).')+step(3,'Conferma con <b>Installa</b>.');
+    return step(1,'Nella barra degli indirizzi clicca l’icona <b>Installa</b> ⊕ (Chrome/Edge).')+step(2,'Oppure apri il link dal telefono e installala lì.');
+  }
+  function openSheet(){body.innerHTML=guide();sheet.hidden=false;requestAnimationFrame(()=>sheet.classList.add('on'))}
+  function closeSheet(){sheet.classList.remove('on');setTimeout(()=>sheet.hidden=true,250)}
+  async function install(){
+    if(deferred){deferred.prompt();const r=await deferred.userChoice;deferred=null;if(r.outcome==='accepted'){box.hidden=true;top.hidden=true}return}
+    openSheet();
+  }
+  addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;top.hidden=false;if(!store.get('knp_install_x',false))box.hidden=false});
+  addEventListener('appinstalled',()=>{box.hidden=true;top.hidden=true;closeSheet()});
+  if(mobile||location.protocol.startsWith('http')){top.hidden=false}
+  if(mobile&&!store.get('knp_install_x',false)){box.hidden=false;
+    msg.innerHTML=ios?'Aggiungila alla schermata Home: ti spiego come.':'Icona sulla home, schermo intero, anche offline.'}
+  btn.textContent='INSTALLA';
+  btn.addEventListener('click',install); top.addEventListener('click',install);
   $('insX').addEventListener('click',()=>{box.hidden=true;store.set('knp_install_x',true)});
-  addEventListener('appinstalled',()=>{box.hidden=true});
+  $('shOk').addEventListener('click',closeSheet);
+  $('shLater').addEventListener('click',()=>{store.set('knp_install_x',true);box.hidden=true;closeSheet()});
+  sheet.addEventListener('click',e=>{if(e.target===sheet)closeSheet()});
+  // prima visita dal telefono: mostra la guida dopo la splash
+  if(mobile&&!store.get('knp_sheet_seen',false)){store.set('knp_sheet_seen',true);
+    const wait=()=>$('title').classList.contains('active')?setTimeout(()=>{if(!deferred)openSheet()},900):setTimeout(wait,300);wait()}
 })();
 
 </script>
