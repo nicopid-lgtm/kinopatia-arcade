@@ -1238,15 +1238,20 @@ const GAMES = [
 { id:'topo', name:'Topologia', verb:'QUAD!', dur:4.5,
   how:'Questa mesh è fatta tutta di <b>quad</b> (facce a 4 lati). Una faccia è un triangolo o un n-gon: toccala.',
   start(st,lv,api){
-    const n=lv<1?4:lv<3?5:6, m=n+1, odd=ri(0,n*m-1), kind=pick(['tri','tri','ngon']);
-    const P=(i,j)=>{const u=i/n,v=j/m;const top=20+(1-v)*0, w=56+v*36, x=50+(u-.5)*w*1.6, y=8+v*80+Math.sin(u*Math.PI*1.4+v*2)*4*(1-v*.4);return [x,y]};
+    const n=lv<1?5:lv<3?6:7, m=n+1, odd=ri(0,n*m-1), kind=pick(['tri','tri','ngon']);
+    // mesh leggermente irregolare: nessuna faccia è perfetta, così il triangolo non salta all'occhio
+    const J=lv<1?.6:1.3, jit={};
+    const P=(i,j)=>{const k=i+','+j; if(!jit[k])jit[k]=(i===0||i===n||j===0||j===m)?[0,0]:[rand(-J,J),rand(-J,J)];
+      const u=i/n,v=j/m,w=64+v*30;
+      return [50+(u-.5)*w*.98+jit[k][0], 6+v*82+Math.sin(u*Math.PI*1.4+v*2)*4*(1-v*.4)+jit[k][1]]};
+    const ew=lv<1?.5:.4, eo=lv<1?.9:.75; // spigoli del difetto: in prova un filo più evidenti, poi identici agli altri
     let cells='';
     for(let j=0;j<m;j++)for(let i=0;i<n;i++){const id=j*n+i,a=P(i,j),b=P(i+1,j),c=P(i+1,j+1),d=P(i,j+1);
-      const sh=Math.round(30+ (1-j/m)*25 + (i%2)*4);
+      const sh=Math.round(30+(1-j/m)*22+rand(-5,5));
       const fill=`hsl(0,0%,${sh}%)`;
       let extra='';
-      if(id===odd){ if(kind==='tri') extra=`<line x1="${a[0]}" y1="${a[1]}" x2="${c[0]}" y2="${c[1]}" stroke="#fff" stroke-width=".55"/>`;
-        else {const mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2-2.4;extra=`<polyline points="${a[0]},${a[1]} ${mx},${my} ${b[0]},${b[1]}" fill="none" stroke="#fff" stroke-width=".55"/><circle cx="${mx}" cy="${my}" r=".9" fill="#fff"/>`}}
+      if(id===odd){ if(kind==='tri') extra=`<line x1="${a[0]}" y1="${a[1]}" x2="${c[0]}" y2="${c[1]}" stroke="#fff" stroke-opacity="${eo}" stroke-width="${ew}"/>`;
+        else {const lift=lv<1?1.6:lv<3?.7:0, mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2-lift;extra=`<polyline points="${a[0]},${a[1]} ${mx},${my} ${b[0]},${b[1]}" fill="none" stroke="#fff" stroke-opacity="${eo}" stroke-width="${ew}"/><circle cx="${mx}" cy="${my}" r=".7" fill="#fff"/>`}}
       cells+=`<g data-i="${id}" class="fc"><polygon points="${a} ${b} ${c} ${d}" fill="${fill}" stroke="#fff" stroke-opacity=".75" stroke-width=".4"/>${extra}</g>`;
     }
     let verts='';for(let j=0;j<=m;j++)for(let i=0;i<=n;i++){const p=P(i,j);verts+=`<circle cx="${p[0]}" cy="${p[1]}" r=".7" fill="#fff"/>`}
@@ -1523,7 +1528,8 @@ function start(){
   warm=MIX.deck.slice().sort(()=>Math.random()-.5); warmTotal=warm.length; warmup=true;
   $('sc').textContent='0';
   $('modtag').textContent=m.n==='Classico'?'':m.n.toUpperCase();
-  $('stage').style.filter=m.filter||'';
+  // negativo su tutta la schermata di gioco (sfondo compreso), così le scritte restano leggibili; le spiegazioni restano in positivo
+  $('stage').style.filter='';$('game').style.filter=m.filter||'';$('brief').style.filter=m.filter||'';
   renderLives();show('game');next();
 }
 
