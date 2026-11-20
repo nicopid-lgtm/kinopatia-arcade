@@ -544,6 +544,9 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 .sh-later{width:100%;background:none;color:#8a8782;font-family:var(--body);font-size:13px;padding:12px;border:0}
 .sh-arrow{text-align:center;font-size:30px;color:var(--acc2);margin-top:6px;animation:sha 1s ease-in-out infinite}
 @keyframes sha{50%{transform:translateY(6px)}}
+.lb-load,.lb-empty{font-size:12px;color:var(--mute);padding:8px 2px;letter-spacing:.06em}
+.lb-err,.reg-err{color:#ff8a7a;font-size:12.5px}
+.reg-err{margin-top:4px}
 </style>
 </head>
 <body>
@@ -1511,19 +1514,41 @@ function start(){
 }
 
 /* ---------- CLASSIFICA & GIOCATORE ----------
-   LB è l'unico punto da collegare al backend vero (es. Supabase / Google Sheet / HubSpot).
-   Ora salva in locale, in modalità demo. */
+   LB_URL = indirizzo dell'app web Google Apps Script (backend/Code.gs).
+   Vuoto = modalità demo: la classifica resta sul telefono. */
+const LB_URL='';
+const LIVE=!!LB_URL;
 const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-const LB_KEY='knp_lb_'+ED_KEY;
-const LB={
-  all(){let a=store.get(LB_KEY,null);if(!a){a=[{id:'d1',name:'Giocatore demo',company:'Studio Alfa',score:14,demo:1},{id:'d2',name:'Giocatore demo',company:'Agenzia Beta',score:11,demo:1},{id:'d3',name:'Giocatore demo',company:'Brand Gamma',score:9,demo:1},{id:'d4',name:'Giocatore demo',company:'Studio Delta',score:6,demo:1},{id:'d5',name:'Giocatore demo',company:'Agenzia Epsilon',score:4,demo:1}];store.set(LB_KEY,a)}return a.sort((x,y)=>y.score-x.score)},
-  submit(p,score){const a=LB.all();const e=a.find(r=>r.id===p.id);if(e){if(score>e.score)e.score=score;e.name=p.name;e.company=p.company}else a.push({id:p.id,name:p.name,company:p.company,score});store.set(LB_KEY,a);return LB.rank(p.id)},
-  rank(id){return LB.all().findIndex(r=>r.id===id)+1},
-  wouldRank(score){return LB.all().filter(r=>r.score>score).length+1},
-};
 const getPlayer=()=>store.get('knp_player',null);
 const setPlayer=p=>store.set('knp_player',p);
 const esc=s=>String(s).replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
+const rid=n=>Array.from(crypto.getRandomValues(new Uint8Array(n)),x=>x.toString(36).padStart(2,'0')).join('').slice(0,n*2);
+
+/* demo locale con la stessa interfaccia del backend */
+const LOCAL={
+  key:'knp_lb_'+ED_KEY,
+  all(){let a=store.get(this.key,null);if(!a){a=[['Studio Alfa',14],['Agenzia Beta',11],['Brand Gamma',9],['Studio Delta',6],['Agenzia Epsilon',4]].map(([c,s],i)=>({id:'d'+i,name:'Giocatore demo',company:c,score:s}));store.set(this.key,a)}return a.sort((x,y)=>y.score-x.score)},
+  board(id){const a=this.all(),me=a.findIndex(r=>r.id===id)+1;const rows=a.slice(0,20).map(r=>({name:r.name,company:r.company,score:r.score,me:r.id===id}));
+    if(me>20)rows.push({...a[me-1],me:true,pos:me});return {ok:true,rows,me,total:a.length}},
+  put(p,score){const a=this.all();const e=a.find(r=>r.id===p.id);if(e){e.score=Math.max(e.score,score);e.name=p.name;e.company=p.company}else a.push({id:p.id,name:p.name,company:p.company,score});store.set(this.key,a)}
+};
+const LB={
+  cache:store.get('knp_lbc_'+ED_KEY,{rows:[],me:0,total:0}),
+  save(j){if(j&&j.ok){this.cache=j;store.set('knp_lbc_'+ED_KEY,j)}return j},
+  async get(){const p=getPlayer();
+    if(!LIVE)return this.save(LOCAL.board(p&&p.id));
+    const r=await fetch(`${LB_URL}?edition=${encodeURIComponent(ED_KEY)}&id=${encodeURIComponent(p?p.id:'')}`);return this.save(await r.json())},
+  async post(body){const r=await fetch(LB_URL,{method:'POST',body:JSON.stringify(body)});return this.save(await r.json())},
+  async register(p,score){
+    if(!LIVE){LOCAL.put(p,score);return this.save(LOCAL.board(p.id))}
+    return this.post({action:'register',id:p.id,key:p.key,name:p.name,company:p.company,email:p.email,consent:true,edition:ED_KEY,score})},
+  async submit(p,score){
+    if(!LIVE){LOCAL.put(p,score);return this.save(LOCAL.board(p.id))}
+    const j=await this.post({action:'score',id:p.id,key:p.key,edition:ED_KEY,score});
+    if(j&&j.error==='unknown'&&p.email)return this.register(p,score);
+    return j},
+  wouldRank(score){return this.cache.rows.filter(r=>!r.me&&r.score>score).length+1}
+};
 
 function renderPrizes(){
   const P=E.prizes;
@@ -1532,39 +1557,50 @@ function renderPrizes(){
   const days=Math.ceil((new Date(E.deadlineISO)-new Date())/864e5);
   $('deadline1').textContent= days>1?`CHIUDE TRA ${days} GIORNI`: days===1?'CHIUDE DOMANI':'CLASSIFICA CHIUSA';
   $('deadline2').textContent='chiude il '+E.deadline;
-  $('terms').textContent=`Classifica valida fino al ${E.deadline}. Premi: ${E.prizes.map(p=>p.r+' '+p.t).join(' · ')}. Un premio per azienda · lavoro a discrezione di Kinopatia · i dati servono solo per la classifica e il premio.`;
+  $('terms').textContent=`Classifica valida fino al ${E.deadline}. Premi: ${E.prizes.map(p=>p.r+' '+p.t).join(' · ')}. Un premio per azienda · lavoro a discrezione di Kinopatia · i dati servono solo per la classifica e il premio. In classifica compaiono solo nome abbreviato e azienda.`;
+  document.querySelector('.lb-demo').textContent=LIVE?'Classifica in tempo reale · aggiornata a ogni partita':'DEMO · la classifica condivisa si attiva con la versione pubblicata';
 }
-function renderLB(myScore){
-  const p=getPlayer(), a=LB.all(), me=p?a.findIndex(r=>r.id===p.id):-1;
-  let rows=a.slice(0,5).map((r,i)=>row(i+1,r,i===me));
-  if(me>=5) rows.push('<div class="lb-gap">···</div>'+row(me+1,a[me],true));
+function renderLB(myScore,loading){
+  const p=getPlayer(), c=LB.cache;
+  const row=(pos,r)=>`<div class="lb-row ${r.me?'mine':''} ${pos===1?'first':''}"><span class="pos">#${pos}</span><span class="who">${esc(r.name)}<small>${esc(r.company)}</small></span><span class="pts">${r.score}</span></div>`;
+  let rows=c.rows.slice(0,5).map((r,i)=>row(i+1,r));
+  if(c.me>5){const m=c.rows.find(r=>r.me);if(m)rows.push('<div class="lb-gap">···</div>'+row(c.me,m))}
+  if(!rows.length&&!loading)rows.push('<div class="lb-empty">Nessuno in classifica: il primo posto è libero!</div>');
   if(!p){const wr=LB.wouldRank(myScore);rows.push(`<div class="lb-row ghost"><span class="pos">#${wr}</span><span class="who">Tu <small>non ancora in classifica</small></span><span class="pts">${myScore}</span></div>`)}
+  if(loading)rows.unshift('<div class="lb-load">Aggiorno la classifica…</div>');
   $('lbRows').innerHTML=rows.join('');
-  function row(pos,r,mine){return `<div class="lb-row ${mine?'mine':''} ${pos===1?'first':''}"><span class="pos">#${pos}</span><span class="who">${esc(r.name)}<small>${esc(r.company)}</small></span><span class="pts">${r.score}</span></div>`}
 }
-function renderMe(){
+function renderMe(err){
   const p=getPlayer();
   $('reg').style.display=p?'none':'block';
-  if(p){const rk=LB.rank(p.id);$('me').style.display='block';
-    $('me').innerHTML=`Giochi come <b>${esc(p.name)} · ${esc(p.company)}</b>. Sei <b>#${rk}</b> in classifica: il tuo record si aggiorna da solo a ogni partita. <button class="link" id="notme">Non sei tu?</button>`;
+  if(p){$('me').style.display='block';
+    const rk=LB.cache.me;
+    $('me').innerHTML=(err?`<span class="lb-err">${err}</span><br>`:'')+`Giochi come <b>${esc(p.name)} · ${esc(p.company)}</b>. ${rk?`Sei <b>#${rk}</b> in classifica:`:'Sei in classifica:'} il tuo record si aggiorna da solo a ogni partita. <button class="link" id="notme">Non sei tu?</button>`;
     $('notme').onclick=()=>{store.set('knp_player',null);renderMe();renderLB(+$('goScore').textContent)};
   } else $('me').style.display='none';
 }
+const NET_ERR='Connessione assente: il record verrà inviato alla prossima partita online.';
 function gameOver(){
   const p=getPlayer();
   let best=store.get('knp_best_'+ED_KEY,0); if(score>best){best=score;store.set('knp_best_'+ED_KEY,best)}
-  if(p)LB.submit(p,best);
   $('goScore').textContent=score;
   $('best').textContent= score>=best&&score>0?'Nuovo record personale ✦':`Il tuo record: ${best}`;
-  renderLB(best); renderMe();
+  renderLB(best,true); renderMe();
   show('over'); $('over').scrollTop=0; fitAll($('over'));
+  (p?LB.submit(p,best):LB.get()).then(()=>{renderLB(best);renderMe()}).catch(()=>{renderLB(best);renderMe(p?NET_ERR:'')});
 }
 $('regForm').addEventListener('submit',e=>{
   e.preventDefault();const f=new FormData(e.target);
-  const p={id:'p'+Math.random().toString(36).slice(2,10),name:String(f.get('nome')).trim(),company:String(f.get('azienda')).trim(),email:String(f.get('email')).trim()};
-  setPlayer(p); LB.submit(p,store.get('knp_best_'+ED_KEY,0));
-  beep(1200,.08);beep(1600,.12);
-  renderLB(0); renderMe();
+  const p={id:'p'+rid(6),key:rid(12),name:String(f.get('nome')).trim(),company:String(f.get('azienda')).trim(),email:String(f.get('email')).trim()};
+  const btn=e.target.querySelector('button');btn.disabled=true;btn.textContent='UN ATTIMO…';
+  const best=store.get('knp_best_'+ED_KEY,0);
+  LB.register(p,best).then(j=>{
+    if(!j||!j.ok)throw new Error(j&&j.error||'x');
+    setPlayer(p);beep(1200,.08);beep(1600,.12);renderLB(best);renderMe();
+  }).catch(err=>{btn.disabled=false;btn.textContent='RIPROVA';
+    const m=document.querySelector('.reg-err')||Object.assign(document.createElement('p'),{className:'reg-err'});
+    m.textContent=String(err.message)==='invalid'?'Controlla i dati: nome, azienda, email valida e consenso.':'Non riesco a collegarmi: controlla la connessione e riprova.';
+    e.target.appendChild(m)});
 });
 $('play').addEventListener('click',()=>{beep(660,.05);start()});
 $('again').addEventListener('click',start);
