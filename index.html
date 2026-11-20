@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<meta name="description" content="Kinopatia Arcade · microgiochi di 2D, 3D e animazione. Gioca, scala la classifica, vinci.">
+<meta name="description" content="Kinopatia Arcade · microgiochi di 2D, 3D e animazione. Gioca, scala la classifica, conquista la gloria.">
 <meta name="theme-color" content="#050505">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="icons/favicon.svg?v=xmas26">
@@ -17,7 +17,7 @@
 <meta property="og:site_name" content="Kinopatia">
 <meta property="og:url" content="https://arcade.kinopatia.com/">
 <meta property="og:title" content="Kinopatia Arcade · Christmas Edition ’26">
-<meta property="og:description" content="14 microgiochi di 2D, 3D e animazione. Scala la classifica e vinci un regalo dello studio.">
+<meta property="og:description" content="14 microgiochi di 2D, 3D e animazione. Scala la classifica e conquista punti gloria.">
 <meta property="og:image" content="https://arcade.kinopatia.com/icons/og-xmas.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -333,6 +333,7 @@ form input:focus{border-color:var(--ink)}
 .lb-row .who small{font-size:11px;color:var(--mute);margin-top:2px}
 .lb-row .pts{font-family:var(--disp);font-weight:900;font-size:18px}
 .lb-row.first .pos{color:var(--acc2)}
+.lb-row.p1 .pos{color:#F7D774}.lb-row.p2 .pos{color:#d9dde3}.lb-row.p3 .pos{color:#d39a6a}
 .lb-row.mine{background:var(--acc);color:#fff;border-color:transparent}.lb-row.mine .pos,.lb-row.mine small{color:#fff;opacity:.85}
 .lb-row.ghost{border:1px dashed #444;margin-top:8px}
 .lb-gap{text-align:center;color:#444;padding:4px}
@@ -599,9 +600,9 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       </div>
 
       <div class="sec">
-        <div class="sec-head"><span>IN PALIO</span><span class="countdown" id="deadline1"></span></div>
+        <div class="sec-head"><span>IN PALIO: SOLO GLORIA</span><span class="countdown" id="deadline1"></span></div>
         <div class="podium" id="prizeRows"></div>
-        <p class="prizes-note">Gioca quante volte vuoi: conta il tuo record. Alla chiusura della classifica i primi ricevono codice e premio via email.</p>
+        <p class="prizes-note">Gioca quante volte vuoi: conta il tuo record. Alla chiusura, oro, argento e bronzo entrano nell’albo d’oro Kinopatia.</p>
       </div>
 
       <div class="outro">
@@ -647,13 +648,13 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     </div>
 
     <div class="regcard" id="reg">
-      <h3>Vuoi vincere?</h3>
+      <h3>Vuoi la gloria?</h3>
       <p>Entra in classifica. Ti registri <b>una volta sola</b>: da lì i tuoi record si aggiornano da soli.</p>
       <form id="regForm">
         <input required name="nome" placeholder="Nome e cognome" autocomplete="name">
         <input required name="azienda" placeholder="Agenzia / azienda" autocomplete="organization">
         <input required type="email" name="email" placeholder="Email di lavoro" autocomplete="email">
-        <label class="consent"><input type="checkbox" required> Accetto di essere contattato da Kinopatia per la classifica e il premio.</label>
+        <label class="consent"><input type="checkbox" required> Accetto di essere contattato da Kinopatia via email.</label>
         <button class="btn acc" type="submit">ENTRA IN CLASSIFICA</button>
       </form>
     </div>
@@ -702,7 +703,7 @@ addEventListener('resize',fitApp);addEventListener('orientationchange',()=>setTi
 const EDITIONS={
   natale:{
     tag:'Christmas Edition ’26', kicker:'Kinopatia Arcade · Natale', h1a:'XMAS', h1b:'SHOTS',
-    intro:'Il nostro regalo di Natale: microgiochi di 2D, 3D e animazione. Ogni partita è un mix diverso. Più vai lontano, più vinci.',
+    intro:'Il nostro regalo di Natale: microgiochi di 2D, 3D e animazione. Ogni partita è un mix diverso. Più vai lontano, più punti gloria fai.',
     themes:[{acc:'#E3262F',acc2:'#F5C542',bg:'#2A0709'},{acc:'#1E8C4E',acc2:'#F4F2EE',bg:'#05200F'},{acc:'#C8102E',acc2:'#7FE3C4',bg:'#1F0510'},{acc:'#2F6BFF',acc2:'#F5C542',bg:'#071230'}],
     xmas:true,
     kfObjs:['gift','gift','bauble','logo'],
@@ -715,11 +716,11 @@ const EDITIONS={
     koEnd:'Il cliente è andato in ferie.',
     sign:'Auguri da tutto il team Kinopatia ✦',
     deadline:'6 gennaio 2027', deadlineISO:'2027-01-06T23:59:00',
-    prizes:[{r:'1°',t:'Chiedeteci una cosa. È gratis.'},{r:'2°–3°',t:'Styleframe gratuito per una gara'},{r:'4°–10°',t:'30 min di brainstorming creativo'}],
+    prizes:[{r:'1°',m:'ORO',t:'Gloria eterna. Almeno fino al prossimo Natale.'},{r:'2°',m:'ARGENTO',t:'Gloria, quasi eterna.'},{r:'3°',m:'BRONZO',t:'Gloria. Vale lo stesso.'}],
   },
   classic:{
     tag:'Edition ’26', kicker:'Kinopatia Arcade', h1a:'MICRO', h1b:'SHOTS',
-    intro:'Microgiochi di 2D, 3D e animazione. Ogni partita è un mix diverso. Più vai lontano, più vinci.',
+    intro:'Microgiochi di 2D, 3D e animazione. Ogni partita è un mix diverso. Più vai lontano, più punti gloria fai.',
     themes:[{acc:'#FF4B26',acc2:'#D6FF3A',bg:'#050505'},{acc:'#3D5AFE',acc2:'#FFD23F',bg:'#050505'},{acc:'#FF2E88',acc2:'#3CF2C6',bg:'#050505'},{acc:'#8B5CFF',acc2:'#FF9A3C',bg:'#050505'},{acc:'#00B37E',acc2:'#F4F2EE',bg:'#050505'}],
     xmas:false,
     kfObjs:['ball','ball','cube','logo'],
@@ -732,7 +733,7 @@ const EDITIONS={
     koEnd:'Il cliente ha chiamato un altro studio.',
     sign:'Un saluto da tutto il team Kinopatia ✦',
     deadline:'31 marzo 2027', deadlineISO:'2027-03-31T23:59:00',
-    prizes:[{r:'1°',t:'Chiedeteci una cosa. È gratis.'},{r:'2°–3°',t:'Styleframe gratuito per una gara'},{r:'4°–10°',t:'30 min di brainstorming creativo'}],
+    prizes:[{r:'1°',m:'ORO',t:'Gloria eterna. Almeno fino alla prossima edizione.'},{r:'2°',m:'ARGENTO',t:'Gloria, quasi eterna.'},{r:'3°',m:'BRONZO',t:'Gloria. Vale lo stesso.'}],
   },
 };
 const ED_KEY = EDITIONS[location.hash.slice(1)] ? location.hash.slice(1) : 'natale';
@@ -1552,17 +1553,17 @@ const LB={
 
 function renderPrizes(){
   const P=E.prizes;
-  $('prizeRows').innerHTML=`<div class="pz gold"><div class="pz-r">${P[0].r}<small>POSTO</small></div><div class="pz-t">${P[0].t}</div><div class="pz-k">${logoSVG()}</div></div>
-    <div class="pz-row">${P.slice(1).map((p,i)=>`<div class="pz ${i?'bronze':'silver'}"><div class="pz-r">${p.r}</div><div class="pz-t">${p.t}</div></div>`).join('')}</div>`;
+  $('prizeRows').innerHTML=`<div class="pz gold"><div class="pz-r">${P[0].r}<small>${P[0].m}</small></div><div class="pz-t">${P[0].t}</div><div class="pz-k">${logoSVG()}</div></div>
+    <div class="pz-row">${P.slice(1).map((p,i)=>`<div class="pz ${i?'bronze':'silver'}"><div class="pz-r">${p.r}<small>${p.m}</small></div><div class="pz-t">${p.t}</div></div>`).join('')}</div>`;
   const days=Math.ceil((new Date(E.deadlineISO)-new Date())/864e5);
   $('deadline1').textContent= days>1?`CHIUDE TRA ${days} GIORNI`: days===1?'CHIUDE DOMANI':'CLASSIFICA CHIUSA';
   $('deadline2').textContent='chiude il '+E.deadline;
-  $('terms').textContent=`Classifica valida fino al ${E.deadline}. Premi: ${E.prizes.map(p=>p.r+' '+p.t).join(' · ')}. Un premio per azienda · lavoro a discrezione di Kinopatia · i dati servono solo per la classifica e il premio. In classifica compaiono solo nome abbreviato e azienda.`;
+  $('terms').textContent=`Classifica valida fino al ${E.deadline}. Si gioca solo per la gloria: nessun premio in palio. I dati servono solo per la classifica e per contattarti. In classifica compaiono solo nome abbreviato e azienda.`;
   document.querySelector('.lb-demo').textContent=LIVE?'Classifica in tempo reale · aggiornata a ogni partita':'DEMO · la classifica condivisa si attiva con la versione pubblicata';
 }
 function renderLB(myScore,loading){
   const p=getPlayer(), c=LB.cache;
-  const row=(pos,r)=>`<div class="lb-row ${r.me?'mine':''} ${pos===1?'first':''}"><span class="pos">#${pos}</span><span class="who">${esc(r.name)}<small>${esc(r.company)}</small></span><span class="pts">${r.score}</span></div>`;
+  const row=(pos,r)=>`<div class="lb-row ${r.me?'mine':''} ${pos===1?'first':''} ${pos<4?'p'+pos:''}"><span class="pos">#${pos}</span><span class="who">${esc(r.name)}<small>${esc(r.company)}</small></span><span class="pts">${r.score}</span></div>`;
   let rows=c.rows.slice(0,5).map((r,i)=>row(i+1,r));
   if(c.me>5){const m=c.rows.find(r=>r.me);if(m)rows.push('<div class="lb-gap">···</div>'+row(c.me,m))}
   if(!rows.length&&!loading)rows.push('<div class="lb-empty">Nessuno in classifica: il primo posto è libero!</div>');
