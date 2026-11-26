@@ -407,6 +407,17 @@ form input:focus{border-color:var(--ink)}
 .outro-k{width:54px;margin:0 auto;color:#fff}
 .outro .sign{margin-top:14px;font-size:20px}
 .outro .foot{margin-top:12px}
+.welcome{font-size:14px;line-height:1.45;color:#fff;opacity:.9;margin-bottom:14px;font-weight:500}
+.welcome b{color:var(--acc2)}
+.home-lb{margin-top:0}
+.tut-reset{display:block;margin:16px auto 0;font-size:12px;color:var(--mute);background:none;border:0;text-decoration:underline;cursor:pointer;font-family:inherit}
+.rv{text-align:center}
+.rv-ic{width:56px;height:56px;margin:18px auto 8px;border-radius:16px;display:flex;align-items:center;justify-content:center;background:#fff;color:#111;font-family:var(--disp);font-weight:900;font-size:24px}
+.rv-k{font-size:10px;letter-spacing:.22em;opacity:.75}
+.rv-list{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:22px 0 4px}
+.rv-list span{padding:8px 12px;border-radius:999px;background:rgba(0,0,0,.25);font-size:13px;font-weight:600;animation:tin .4s both}
+.rv-list span.new{background:#fff;color:#111}
+.rv-list span.new::after{content:"NUOVO";font-size:8px;letter-spacing:.15em;margin-left:6px;opacity:.6;vertical-align:2px}
 
 /* ===== HOME v7 (cover illustrata) ===== */
 .poster{padding:0;border-radius:0 0 34px 34px;background:var(--gbg,#120a24)}
@@ -587,6 +598,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
         <div class="topbar"><div class="logo-slot" data-logo></div><div class="tb-r"><button class="getapp" id="getApp" hidden>⬇ Installa app</button><span class="edbadge" id="edTag"></span></div></div>
         <div class="hero-art" id="heroArt"></div>
         <div class="hero">
+          <div class="welcome" id="welcome"></div>
           <div class="kicker" id="kicker"></div>
           <h1 id="h1"></h1>
           <p id="intro"></p>
@@ -600,22 +612,21 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       </div>
 
       <div class="sec">
-        <div class="sec-head"><span>IL TUO MIX <b id="mixNo">#0000</b></span><span class="sec-hint" id="mixHint"></span></div>
-        <div class="tiles" id="chips"></div>
-        <div class="ticket" id="modline"></div>
-        <button class="btn reroll-big" id="reroll"><span class="dice">↻</span> RIMESCOLA I GIOCHI</button>
+        <div class="sec-head"><span>CLASSIFICA</span><span class="countdown" id="deadline1"></span></div>
+        <div class="lbcard home-lb"><div id="homeLB"></div></div>
       </div>
 
       <div class="sec">
-        <div class="sec-head"><span>IN PALIO: SOLO GLORIA</span><span class="countdown" id="deadline1"></span></div>
+        <div class="sec-head"><span>IN PALIO: SOLO GLORIA</span></div>
         <div class="podium" id="prizeRows"></div>
-        <p class="prizes-note">Gioca quante volte vuoi: conta il tuo record. Alla chiusura, oro, argento e bronzo entrano nell’albo d’oro Kinopatia.</p>
+        <p class="prizes-note">Ogni partita è un mix a sorpresa: 6 giochi su 14 e un modificatore. Gioca quante volte vuoi, conta il tuo record. Alla chiusura, oro, argento e bronzo entrano nell’albo d’oro Kinopatia.</p>
       </div>
 
       <div class="outro">
         <div class="outro-k" data-logo></div>
         <div class="sign" id="sign"></div>
         <div class="foot">MADE BY <a href="https://kinopatia.com">KINOPATIA</a> · PULA, ISTRIA</div>
+        <button class="link tut-reset" id="resetTut">Rivedi le spiegazioni dei giochi</button>
       </div>
     </div>
     <div class="playbar"><button class="btn acc" id="play">GIOCA</button></div>
@@ -668,8 +679,8 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     <div class="me" id="me"></div>
 
     <div class="row">
-      <button class="btn" id="again">RIGIOCA</button>
-      <button class="btn ghost" id="newmix">NUOVO MIX ↻</button>
+      <button class="btn" id="again">RIGIOCA ↻</button>
+      <button class="btn ghost" id="newmix">HOME</button>
     </div>
     <p class="terms" id="terms"></p>
     <div class="sign" id="sign2"></div>
@@ -1443,10 +1454,6 @@ function newMix(){
   let theme; do{theme=pick(E.themes)}while(theme===THEME&&E.themes.length>1);
   MIX={no:String(ri(1,9999)).padStart(4,'0'),mod,deck:pool.slice(0,6),theme};
   setTheme(theme);
-  $('mixHint').textContent=`${MIX.deck.length} GIOCHI SU ${GAMES.length}`;
-  $('mixNo').textContent='#'+MIX.no;
-  $('chips').innerHTML=MIX.deck.map((g,i)=>`<div class="mrow" style="animation-delay:${i*50}ms"><span>0${i+1}</span>${g.name}</div>`).join('');
-  $('modline').innerHTML=`<div class="tk-ic">${MOD_IC[mod.n]||'✦'}</div><div><small>MODIFICATORE</small><b>${mod.n}</b><span>${mod.d}</span></div>`;
 }
 
 /* ---------- MOTORE ----------
@@ -1476,6 +1483,12 @@ const briefHTML=g=>`<div class="b-top"><span>RISCALDAMENTO ${warmTotal-warm.leng
   <div class="b-bar"><i></i></div><div class="b-tap">TOCCA QUANDO SEI PRONTO</div>`;
 const quickHTML=g=>`<div class="ov-center"><div class="b-top"><span>SHOT ${String(shot).padStart(2,'0')}</span><span>${'SPEED '+level}</span></div><div class="b-verb big">${g.verb}</div><div class="b-sub">${g.name}</div></div>`;
 const resultHTML=(ok,msg)=>`<div class="ov-center"><div class="res-badge ${ok?'ok':'ko'}">${ok?'✓':'✕'}</div><div class="b-verb big">${ok?'APPROVATO':(warmup?'QUASI!':'REVISIONE')}</div><div class="b-sub">${msg}</div></div>`;
+const revealHTML=(seen,nNew)=>`<div class="ov-center rv"><div class="b-top"><span>IL TUO MIX #${MIX.no}</span><span>${MIX.deck.length} GIOCHI SU ${GAMES.length}</span></div>
+  <div class="rv-ic">${MOD_IC[MIX.mod.n]||'✦'}</div><div class="rv-k">MODIFICATORE</div>
+  <div class="b-verb big">${MIX.mod.n.toUpperCase()}</div><div class="b-sub">${MIX.mod.d}</div>
+  <div class="rv-list">${MIX.deck.map((g,i)=>`<span class="${seen.includes(g.id)?'':'new'}" style="animation-delay:${200+i*70}ms">${g.name}</span>`).join('')}</div>
+  <p class="b-note">${nNew?(nNew===1?'Un gioco nuovo: prima te lo spieghiamo con un giro di prova.':`${nNew} giochi nuovi: prima te li spieghiamo con un giro di prova.`):'Li conosci già tutti: niente prova, si parte subito.'}</p>
+  <div class="b-bar"><i></i></div><div class="b-tap">TOCCA PER INIZIARE</div></div>`;
 const noticeHTML=(top,title,msg)=>`<div class="ov-center"><div class="b-top"><span>${top}</span><span></span></div><div class="b-verb big">${title}</div><div class="b-sub">${msg}</div></div>`;
 
 async function next(){
@@ -1485,7 +1498,7 @@ async function next(){
   last=g.id; shot++; setLvl();
   $('stage').innerHTML=''; $('timerbar').style.transform='scaleX(1)'; $('timer').classList.remove('warn');
   beep(880,.06);
-  if(warmup){await OV.set(briefHTML(g));await OV.tapWait(BRIEF_MS)}
+  if(warmup){await OV.set(briefHTML(g));markSeen(g.id);await OV.tapWait(BRIEF_MS)}
   else{await OV.set(quickHTML(g));await wait(QUICK_MS)}
   ended=false;
   const s = warmup ? 1/1.3 : 1+level*SPEED_STEP;
@@ -1522,15 +1535,22 @@ async function end(ok){
   }
   next();
 }
-function start(){
-  const m=MIX.mod;
+const getSeen=()=>store.get('knp_seen',[]);
+function markSeen(id){const a=getSeen();if(!a.includes(id)){a.push(id);store.set('knp_seen',a)}}
+async function start(){
+  if(MIX.used)newMix(); MIX.used=true;   // ogni partita è un mix nuovo, svelato all'avvio
+  const m=MIX.mod, seen=getSeen();
   score=0;shot=0;maxLives=m.lives||3;lives=maxLives;level=0;last=null;speedWins=0;
-  warm=MIX.deck.slice().sort(()=>Math.random()-.5); warmTotal=warm.length; warmup=true;
+  // spiegazioni solo per i giochi mai visti; se li conosci tutti si parte subito con la velocità
+  warm=MIX.deck.filter(g=>!seen.includes(g.id)).sort(()=>Math.random()-.5); warmTotal=warm.length; warmup=warm.length>0;
+  if(!warmup)level=1+(m.level||0);
   $('sc').textContent='0';
   $('modtag').textContent=m.n==='Classico'?'':m.n.toUpperCase();
   // negativo su tutta la schermata di gioco (sfondo compreso), così le scritte restano leggibili; le spiegazioni restano in positivo
   $('stage').style.filter='';$('game').style.filter=m.filter||'';$('brief').style.filter=m.filter||'';
-  renderLives();show('game');next();
+  renderLives();setLvl();show('game');
+  beep(520,.06);await OV.set(revealHTML(seen,warmTotal));await OV.tapWait(4200,700);
+  next();
 }
 
 /* ---------- CLASSIFICA & GIOCATORE ----------
@@ -1580,15 +1600,22 @@ function renderPrizes(){
   $('terms').textContent=`Classifica valida fino al ${E.deadline}. Si gioca solo per la gloria: nessun premio in palio. I dati servono solo per la classifica e per contattarti. In classifica compaiono solo nome abbreviato e azienda.`;
   document.querySelector('.lb-demo').textContent=LIVE?'Classifica in tempo reale · aggiornata a ogni partita':'DEMO · la classifica condivisa si attiva con la versione pubblicata';
 }
-function renderLB(myScore,loading){
+function renderLB(myScore,loading){$('lbRows').innerHTML=lbHTML(myScore,loading,true);renderHome()}
+function renderHome(loading){
+  const p=getPlayer(), best=store.get('knp_best_'+ED_KEY,0);
+  $('homeLB').innerHTML=lbHTML(best,loading,best>0);
+  $('welcome').innerHTML=p?`Bentornato, <b>${esc(p.name.split(' ')[0])}</b>! Il tuo record: <b>${best}</b>${LB.cache.me?` · sei <b>#${LB.cache.me}</b> in classifica`:''}.`
+    :'Benvenuti nella sala giochi di Kinopatia ✦';
+}
+function lbHTML(myScore,loading,ghost){
   const p=getPlayer(), c=LB.cache;
   const row=(pos,r)=>`<div class="lb-row ${r.me?'mine':''} ${pos===1?'first':''} ${pos<4?'p'+pos:''}"><span class="pos">#${pos}</span><span class="who">${esc(r.name)}<small>${esc(r.company)}</small></span><span class="pts">${r.score}</span></div>`;
   let rows=c.rows.slice(0,5).map((r,i)=>row(i+1,r));
   if(c.me>5){const m=c.rows.find(r=>r.me);if(m)rows.push('<div class="lb-gap">···</div>'+row(c.me,m))}
   if(!rows.length&&!loading)rows.push('<div class="lb-empty">Nessuno in classifica: il primo posto è libero!</div>');
-  if(!p){const wr=LB.wouldRank(myScore);rows.push(`<div class="lb-row ghost"><span class="pos">#${wr}</span><span class="who">Tu <small>non ancora in classifica</small></span><span class="pts">${myScore}</span></div>`)}
+  if(!p&&ghost){const wr=LB.wouldRank(myScore);rows.push(`<div class="lb-row ghost"><span class="pos">#${wr}</span><span class="who">Tu <small>non ancora in classifica</small></span><span class="pts">${myScore}</span></div>`)}
   if(loading)rows.unshift('<div class="lb-load">Aggiorno la classifica…</div>');
-  $('lbRows').innerHTML=rows.join('');
+  return rows.join('');
 }
 function renderMe(err){
   const p=getPlayer();
@@ -1624,11 +1651,12 @@ $('regForm').addEventListener('submit',e=>{
 });
 $('play').addEventListener('click',()=>{beep(660,.05);start()});
 $('again').addEventListener('click',start);
-$('newmix').addEventListener('click',()=>{newMix();show('title');document.querySelector('.title-scroll').scrollTop=0});
-$('reroll').addEventListener('click',()=>{beep(520,.05);const b=$('reroll');b.classList.remove('spin');void b.offsetWidth;b.classList.add('spin');newMix()});
+$('newmix').addEventListener('click',()=>{renderHome();show('title');document.querySelector('.title-scroll').scrollTop=0;fitAll($('title'))});
+$('resetTut').addEventListener('click',()=>{store.set('knp_seen',[]);$('resetTut').textContent='Fatto: alla prossima partita le rivedi tutte ✓'});
 $('sign2').textContent=E.sign;
 renderPrizes();
 newMix();
+renderHome(!LB.cache.rows.length); LB.get().then(()=>renderHome()).catch(()=>renderHome());
 splash().then(()=>{show('title');fitAll($('title'))});
 
 /* ---------- APP INSTALLABILE (PWA) ---------- */
